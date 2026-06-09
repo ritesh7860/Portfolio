@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ritesh Singh | QA Engineer</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <style>
   :root {
     --navy: #0a0f1e;
@@ -739,9 +740,46 @@
     .prog-badge:not(:first-child) { margin-left: 0; }
     .prog-badge:not(:last-child)::after { display: none; }
   }
+
+/* Toast */
+#toast {
+    position: fixed;
+    align-items: center;
+    top: 20px;
+    right: 20px;
+    background: #28a745;
+    color: white;
+    padding: 14px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-20px);
+
+    transition: all 0.3s ease;
+    z-index: 9999;
+}
+
+#toast.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+#toast.error {
+    background: #dc3545;
+}
+
 </style>
 </head>
 <body>
+ <!-- Toast -->
+
+ <div id="toast"></div>
+
 
 <!-- NAV -->
 <nav>
@@ -1206,12 +1244,13 @@
         </a>
       </div>
     </div>
+  <!-- Contact info Section -->
     <div class="reveal">
       <div class="contact-form">
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">Your Name</label>
-            <input type="text" class="form-input" placeholder="John Doe">
+            <input type="text" class="form-input" placeholder="John Doe" required>
           </div>
           <div class="form-group">
             <label class="form-label">Email Address</label>
@@ -1244,6 +1283,26 @@
 </footer>
 
 <script>
+//Toast Message 
+function showToast(message, type = "success") {
+
+    const toast = document.getElementById("toast");
+
+    toast.innerText = message;
+    toast.className = "";
+
+    if (type === "error") {
+        toast.classList.add("error");
+    }
+
+    toast.classList.add("show");
+
+    setTimeout(() => {
+        toast.classList.remove("show");
+    }, 3000);
+}
+
+
   // Scroll reveal
   const reveals = document.querySelectorAll('.reveal');
   const observer = new IntersectionObserver((entries) => {
@@ -1263,8 +1322,75 @@
       : 'linear-gradient(to bottom, rgba(10,15,30,0.95) 0%, transparent 100%)';
   });
 
-  // Contact form
-  function handleSubmit(btn) {
-    const inputs = document.querySelectorAll('.form-input, .form-textarea');
-    let valid = true;
-    inputs.forEach(i => { if(!i.value.trim()) valid = false; }
+  </script>
+<script>
+emailjs.init("7CNLANTci6Dhe-ZNd");
+
+function handleSubmit(btn) {
+
+    const name = document.querySelectorAll('.form-input')[0];
+    const email = document.querySelectorAll('.form-input')[1];
+    const subject = document.querySelectorAll('.form-input')[2];
+    const message = document.querySelector('.form-textarea');
+
+    // Validate all fields
+    if (
+        !name.value.trim() ||
+        !email.value.trim() ||
+        !subject.value.trim() ||
+        !message.value.trim()
+    ) {
+        btn.innerHTML = "Please fill all fields.";
+        // showToast("Please fill all fields.");
+        return;
+    }
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!emailRegex.test(email.value)) {
+        btn.innerHTML = "Please enter a valid email address.";
+        return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = "Sending...";
+
+    const templateParams = {
+        name: name.value,
+        email: email.value,
+        subject: subject.value,
+        message: message.value
+    };
+
+    emailjs.send(
+        "service_4bypqe6",
+        "template_l3g48af",
+        templateParams
+    )
+    .then(function(response) {
+
+        showToast("Message sent successfully!");
+
+        name.value = "";
+        email.value = "";
+        subject.value = "";
+        message.value = "";
+
+        btn.disabled = false;
+        btn.innerHTML = "&#9993; Send Message";
+
+        console.log("SUCCESS!", response.status, response.text);
+
+    })
+    .catch(function(error) {
+
+        console.error("FAILED...", error);
+
+        showToast("Failed to send message. Please try again.");
+
+        btn.disabled = false;
+        btn.innerHTML = "&#9993; Send Message";
+    });
+}
+</script>
